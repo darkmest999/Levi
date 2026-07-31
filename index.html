@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel Levi 🌪</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:         #0a0c14;
+      --sb:         #111318;
+      --sb-item:    #000000;
+      --sb-hover:   #0f0f0f;
+      --border:     rgba(255,255,255,0.07);
+      --brown:      #8B6043;
+      --brown-l:    #a87248;
+      --brown-d:    #6b4a33;
+      --brown-bg:   rgba(139,96,67,0.10);
+      --white:      #f2f2f2;
+      --muted:      #7a7a8e;
+      --muted2:     #45455a;
+      --accent:     #5865f2;
+      --green:      #23a55a;
+      --red:        #ed4245;
+      --yellow:     #f0a30a;
+      --panel:      #131620;
+      --panel2:     #1a1d2e;
+      --radius:     12px;
+      --radius-sm:  8px;
+      --sb-w:       270px;
+    }
+    html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--white);overflow-x:hidden}
+
+    /* ══════════════════ LANDING ══════════════════ */
+    #landing{
+      position:fixed;inset:0;z-index:200;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:var(--bg);
+      transition:opacity .5s,visibility .5s;
+    }
+    #landing.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .landing-glow{
+      position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);
+      width:500px;height:300px;
+      background:radial-gradient(ellipse,rgba(139,96,67,.15) 0%,transparent 70%);
+      pointer-events:none;
+    }
+    .landing-avatar{
+      width:96px;height:96px;border-radius:50%;
+      object-fit:cover;
+      border:3px solid var(--brown);
+      box-shadow:0 0 32px rgba(139,96,67,.45);
+      margin-bottom:24px;
+      animation:floatAvatar 3s ease-in-out infinite;
+    }
+    @keyframes floatAvatar{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-8px)}
+    }
+    .landing-msg{
+      font-size:18px;font-weight:600;color:var(--muted);
+      text-align:center;max-width:320px;line-height:1.6;
+      animation:fadeUp .8s ease forwards;
+    }
+    .landing-arrow{
+      margin-top:20px;font-size:28px;
+      animation:bounce 1.4s ease-in-out infinite;
+      opacity:.6;
+    }
+    @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .landing-hint{margin-top:8px;font-size:13px;color:var(--muted2)}
+
+    /* ══════════════════ HAMBURGER ══════════════════ */
+    #hamBtn{
+      position:fixed;top:14px;left:16px;z-index:300;
+      width:40px;height:40px;border-radius:var(--radius-sm);
+      background:var(--sb);border:1px solid var(--border);
+      cursor:pointer;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:5px;
+      transition:background .15s,box-shadow .15s;
+    }
+    #hamBtn:hover{background:#1a1d28;box-shadow:0 0 12px rgba(139,96,67,.2)}
+    #hamBtn span{
+      display:block;width:20px;height:2px;
+      background:var(--white);border-radius:2px;
+      transition:transform .25s,opacity .25s;
+    }
+    #hamBtn.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+    #hamBtn.open span:nth-child(2){opacity:0}
+    #hamBtn.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+    /* ══════════════════ OVERLAY ══════════════════ */
+    #overlay{
+      display:none;position:fixed;inset:0;
+      background:rgba(0,0,0,.6);backdrop-filter:blur(2px);
+      z-index:99;
+    }
+    #overlay.show{display:block}
+
+    /* ══════════════════ SIDEBAR ══════════════════ */
+    #sidebar{
+      position:fixed;top:0;left:0;bottom:0;
+      width:var(--sb-w);
+      background:var(--sb);
+      border-right:1px solid var(--border);
+      z-index:100;
+      transform:translateX(-100%);
+      transition:transform .3s cubic-bezier(.4,0,.2,1);
+      display:flex;flex-direction:column;
+      overflow:hidden;
+    }
+    #sidebar.open{transform:translateX(0)}
+
+    /* Avatar area */
+    .sb-avatar-wrap{
+      display:flex;flex-direction:column;align-items:center;
+      padding:28px 20px 20px;
+      position:relative;
+    }
+    .sb-avatar{
+      width:80px;height:80px;border-radius:50%;
+      object-fit:cover;
+      border:3px solid var(--brown);
+      box-shadow:0 0 24px rgba(139,96,67,.4),0 0 48px rgba(139,96,67,.15);
+    }
+    .sb-bot-name{
+      margin-top:12px;font-size:15px;font-weight:700;
+      letter-spacing:-.2px;
+    }
+    .sb-bot-tag{font-size:12px;color:var(--muted);margin-top:2px}
+    .sb-online{
+      display:inline-flex;align-items:center;gap:5px;
+      margin-top:7px;font-size:11px;font-weight:600;color:var(--green);
+      background:rgba(35,165,90,.1);border:1px solid rgba(35,165,90,.2);
+      border-radius:20px;padding:2px 9px;
+    }
+    .sb-online .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+    /* Separator */
+    .sb-sep{height:1px;background:var(--border);margin:4px 0}
+
+    /* Nav */
+    .sb-nav{flex:1;padding:12px 10px;overflow-y:auto}
+
+    .sb-section-title{
+      font-size:11px;font-weight:800;letter-spacing:.1em;
+      text-transform:uppercase;
+      color:var(--brown-l);
+      padding:14px 10px 6px;
+      display:flex;align-items:center;gap:6px;
+    }
+
+    .sb-item{
+      display:flex;align-items:center;gap:10px;
+      padding:11px 14px;
+      border-radius:var(--radius-sm);
+      background:var(--sb-item);
+      margin-bottom:4px;
+      cursor:pointer;
+      font-size:13.5px;font-weight:500;
+      color:#cccccc;
+      border:1px solid rgba(255,255,255,.03);
+      transition:background .15s,color .15s,border-color .15s,transform .1s;
+      user-select:none;
+    }
+    .sb-item:hover{background:#0d0d0d;color:var(--white);transform:translateX(2px)}
+    .sb-item.active{
+      background:var(--brown-bg);
+      border-color:rgba(139,96,67,.3);
+      color:var(--brown-l);
+    }
+    .sb-item .si-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+    .sb-item .si-label{flex:1}
+
+    /* Footer */
+    .sb-footer{
+      padding:12px 16px;border-top:1px solid var(--border);
+      font-size:11px;color:var(--muted2);
+    }
+
+    /* ══════════════════ MAIN ══════════════════ */
+    .main{
+      min-height:100vh;
+      display:flex;flex-direction:column;
+      padding:16px;
+      padding-top:70px;
+    }
+
+    /* ══════════════════ SECTIONS ══════════════════ */
+    .section{
+      display:none;
+      animation:sectionIn .2s ease;
+      max-width:860px;width:100%;margin:0 auto;
+    }
+    .section.active{display:block}
+    @keyframes sectionIn{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    .sec-header{margin-bottom:24px}
+    .sec-title{font-size:22px;font-weight:800;letter-spacing:-.4px}
+    .sec-sub{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+
+    /* ══════════════════ CARDS ══════════════════ */
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:22px;
+      margin-bottom:16px;
+    }
+    .card-title{
+      font-size:14px;font-weight:700;
+      margin-bottom:16px;
+      color:var(--white);
+    }
+
+    /* ══════════════════ COMANDOS EMBEDS ══════════════════ */
+    .cmd-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:12px;
+    }
+    .cmd-embed{
+      background:var(--panel2);
+      border-radius:var(--radius-sm);
+      border-left:4px solid var(--brown);
+      padding:14px 16px;
+      transition:transform .15s,box-shadow .15s;
+    }
+    .cmd-embed:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+    .cmd-embed-name{
+      font-size:16px;font-weight:800;
+      font-family:'Courier New',monospace;
+      color:var(--brown-l);
+      margin-bottom:6px;
+    }
+    .cmd-embed-prefix{
+      font-size:11px;color:var(--muted);
+      background:rgba(255,255,255,.05);
+      border-radius:4px;padding:2px 6px;
+      display:inline-block;margin-bottom:8px;
+      font-family:'Courier New',monospace;
+    }
+    .cmd-embed-desc{font-size:12px;color:var(--muted);line-height:1.5}
+    .cmd-embed-cat{
+      margin-top:10px;font-size:10px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.08em;
+      color:var(--muted2);
+    }
+    .cmd-filter-bar{
+      display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;
+    }
+    .cmd-filter-btn{
+      padding:6px 14px;border-radius:20px;border:1px solid var(--border);
+      background:transparent;color:var(--muted);
+      font-size:12px;font-weight:600;font-family:inherit;
+      cursor:pointer;transition:all .15s;
+    }
+    .cmd-filter-btn:hover,.cmd-filter-btn.active{
+      background:var(--brown-bg);border-color:var(--brown);color:var(--brown-l);
+    }
+
+    /* ══════════════════ GATILHO ══════════════════ */
+    .prefix-display{
+      display:flex;align-items:center;gap:12px;margin-bottom:20px;
+    }
+    .prefix-badge{
+      font-size:48px;font-weight:900;
+      color:var(--brown-l);
+      background:var(--brown-bg);
+      border:2px solid rgba(139,96,67,.3);
+      border-radius:var(--radius);
+      width:80px;height:80px;
+      display:flex;align-items:center;justify-content:center;
+      flex-shrink:0;
+    }
+    .prefix-info{font-size:13px;color:var(--muted);line-height:1.6}
+    .prefix-example{
+      background:#0d1117;
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:14px 18px;
+      font-family:'Courier New',monospace;
+      font-size:14px;
+      margin-top:16px;
+    }
+    .prefix-example .ex-prefix{color:var(--brown-l)}
+    .prefix-example .ex-cmd{color:#79c0ff}
+    .prefix-example .ex-arg{color:#ffa657}
+
+    /* ══════════════════ ATIVAR/DESATIVAR ══════════════════ */
+    .toggle-list{display:flex;flex-direction:column;gap:8px}
+    .toggle-item{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      padding:12px 16px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .toggle-item-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+    .toggle-item-name{font-size:14px;font-weight:600;flex:1}
+    .toggle-item-name small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
+    .ti-switch{
+      width:44px;height:24px;border-radius:20px;border:none;
+      background:var(--muted2);cursor:pointer;position:relative;
+      transition:background .25s;flex-shrink:0;
+    }
+    .ti-switch::after{
+      content:'';position:absolute;
+      top:3px;left:3px;
+      width:18px;height:18px;border-radius:50%;
+      background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);
+      transition:transform .25s;
+    }
+    .ti-switch.on{background:var(--green)}
+    .ti-switch.on::after{transform:translateX(20px)}
+
+    /* ══════════════════ ENTRADA ══════════════════ */
+    .channel-selector{
+      display:flex;flex-direction:column;gap:8px;
+      max-height:280px;overflow-y:auto;
+      padding:4px 0;
+    }
+    .ch-item{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 14px;
+      border-radius:var(--radius-sm);
+      border:1px solid var(--border);
+      background:var(--panel2);
+      cursor:pointer;
+      transition:background .15s,border-color .15s;
+      font-size:13px;
+    }
+    .ch-item:hover{background:#1f2235;border-color:var(--border)}
+    .ch-item.selected{background:var(--brown-bg);border-color:rgba(139,96,67,.4);color:var(--brown-l)}
+    .ch-icon{font-size:15px;flex-shrink:0}
+    .ch-name{font-weight:500}
+    .ch-perms{margin-left:auto;font-size:11px;color:var(--green)}
+    .ch-perms.no{color:var(--red)}
+
+    /* ══════════════════ BOT ON/OFF ══════════════════ */
+    .bot-toggle-center{
+      display:flex;flex-direction:column;align-items:center;
+      padding:40px 20px;gap:20px;
+    }
+    .big-toggle{
+      width:80px;height:44px;border-radius:30px;border:none;
+      background:var(--muted2);cursor:pointer;position:relative;
+      transition:background .3s;
+    }
+    .big-toggle::after{
+      content:'';position:absolute;
+      top:5px;left:5px;
+      width:34px;height:34px;border-radius:50%;
+      background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4);
+      transition:transform .3s;
+    }
+    .big-toggle.on{background:var(--green)}
+    .big-toggle.on::after{transform:translateX(36px)}
+    .big-toggle:disabled{opacity:.45;cursor:not-allowed}
+    .bot-status-text{font-size:18px;font-weight:700;text-align:center}
+    .bot-status-sub{font-size:13px;color:var(--muted);text-align:center}
+
+    /* ══════════════════ FORM INPUTS ══════════════════ */
+    .field{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+    .field-label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .field-input{
+      background:var(--panel2);border:1px solid rgba(255,255,255,.09);
+      border-radius:var(--radius-sm);padding:10px 14px;
+      font-size:14px;color:var(--white);font-family:inherit;
+      outline:none;transition:border-color .15s,box-shadow .15s;width:100%;
+    }
+    .field-input::placeholder{color:var(--muted2)}
+    .field-input:focus{border-color:var(--brown);box-shadow:0 0 0 3px rgba(139,96,67,.2)}
+    .field-textarea{resize:vertical;min-height:80px}
+
+    /* Buttons */
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:7px;
+      padding:10px 20px;border-radius:var(--radius-sm);border:none;
+      font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;
+      transition:opacity .15s,transform .12s,box-shadow .15s;
+    }
+    .btn:hover{opacity:.88;transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+    .btn-brown{background:var(--brown);color:#fff;box-shadow:0 4px 14px rgba(139,96,67,.3)}
+    .btn-green{background:var(--green);color:#fff}
+    .btn-red{background:var(--red);color:#fff}
+    .btn-ghost{background:rgba(255,255,255,.06);color:var(--white);border:1px solid var(--border)}
+
+    /* ══════════════════ SAVE BAR ══════════════════ */
+    #saveBar{
+      position:fixed;bottom:0;left:0;right:0;z-index:500;
+      background:#1a1d2e;border-top:1px solid var(--border);
+      padding:14px 24px;
+      display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+      transform:translateY(100%);
+      transition:transform .3s cubic-bezier(.4,0,.2,1);
+      box-shadow:0 -8px 32px rgba(0,0,0,.5);
+    }
+    #saveBar.show{transform:translateY(0)}
+    .save-bar-msg{flex:1;font-size:13px;font-weight:600;color:var(--yellow)}
+    .save-notice{
+      position:fixed;bottom:74px;left:50%;transform:translateX(-50%);
+      padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;
+      z-index:600;opacity:0;transition:opacity .3s;pointer-events:none;
+      white-space:nowrap;
+    }
+    .save-notice.green{background:rgba(35,165,90,.9);color:#fff}
+    .save-notice.red{background:rgba(237,66,69,.9);color:#fff}
+    .save-notice.show{opacity:1}
+
+    /* ══════════════════ TOAST ══════════════════ */
+    #toasts{
+      position:fixed;bottom:80px;right:20px;
+      display:flex;flex-direction:column;gap:8px;z-index:700;
+    }
+    .toast{
+      padding:11px 16px;border-radius:var(--radius-sm);
+      font-size:13px;font-weight:500;max-width:280px;
+      opacity:0;transform:translateX(20px);
+      transition:opacity .3s,transform .3s;
+      pointer-events:none;
+    }
+    .toast.show{opacity:1;transform:translateX(0)}
+    .t-ok{background:rgba(35,165,90,.9);color:#fff}
+    .t-warn{background:rgba(240,163,10,.9);color:#fff}
+    .t-err{background:rgba(237,66,69,.9);color:#fff}
+
+    /* ══════════════════ MISC ══════════════════ */
+    .divider{height:1px;background:var(--border);margin:18px 0}
+
+    .info-box{
+      background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.2);
+      border-radius:var(--radius-sm);padding:12px 16px;
+      font-size:12px;color:var(--muted);line-height:1.7;
+      margin-top:12px;
+    }
+
+    /* Loading spinner */
+    .spinner{
+      width:20px;height:20px;border:2px solid var(--border);
+      border-top-color:var(--brown-l);border-radius:50%;
+      animation:spin .7s linear infinite;display:inline-block;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ══════════════════ RESPONSIVE ══════════════════ */
+    @media(max-width:600px){
+      .cmd-grid{grid-template-columns:1fr}
+      .main{padding:12px;padding-top:66px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════ LANDING ════════════════ -->
+<div id="landing">
+  <div class="landing-glow"></div>
+  <img class="landing-avatar" src="botfoto.jpg" alt="Levi"
+    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2296%22 height=%2296%22><rect width=%2296%22 height=%2296%22 rx=%2248%22 fill=%22%238B6043%22/><text x=%2248%22 y=%2262%22 text-anchor=%22middle%22 font-size=%2248%22>🌪</text></svg>'" />
+  <p class="landing-msg">Clique nas três barrinhas acima para editar o Levi</p>
+  <div class="landing-arrow">☝️</div>
+  <div class="landing-hint">Painel de controle do Bot Tempest 🌪</div>
+</div>
+
+<!-- ════════════════ HAMBURGER ════════════════ -->
+<button id="hamBtn" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- ════════════════ OVERLAY ════════════════ -->
+<div id="overlay"></div>
+
+<!-- ════════════════ SIDEBAR ════════════════ -->
+<aside id="sidebar">
+
+  <!-- Avatar -->
+  <div class="sb-avatar-wrap">
+    <img class="sb-avatar" src="botfoto.jpg" alt="Bot Levi"
+      onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22><rect width=%2280%22 height=%2280%22 rx=%2240%22 fill=%22%238B6043%22/><text x=%2240%22 y=%2254%22 text-anchor=%22middle%22 font-size=%2240%22>🌪</text></svg>'" />
+    <div class="sb-bot-name">Bot Tempest 🌪</div>
+    <div class="sb-bot-tag">discord.js v14</div>
+    <div class="sb-online"><span class="dot"></span>Online</div>
+  </div>
+
+  <div class="sb-sep"></div>
+
+  <!-- Navigation -->
+  <nav class="sb-nav">
+
+    <!-- COMANDOS section -->
+    <div class="sb-section-title">🐾 COMANDOS &lt;/&gt;</div>
+
+    <div class="sb-item" data-section="comandos">
+      <span class="si-icon">📋</span>
+      <span class="si-label">Comandos</span>
+    </div>
+    <div class="sb-item" data-section="gatilho">
+      <span class="si-icon">⌨️</span>
+      <span class="si-label">Gatilho dos Comandos</span>
+    </div>
+    <div class="sb-item" data-section="togglecmds">
+      <span class="si-icon">🔁</span>
+      <span class="si-label">Ativar e Desativar</span>
+    </div>
+
+    <div class="sb-sep" style="margin:10px 0"></div>
+
+    <!-- COMUNIDADE section -->
+    <div class="sb-section-title">🐾 COMUNIDADE</div>
+
+    <div class="sb-item" data-section="entrada">
+      <span class="si-icon">👋</span>
+      <span class="si-label">Entrada</span>
+    </div>
+    <div class="sb-item" data-section="botonoff">
+      <span class="si-icon">🔌</span>
+      <span class="si-label">Bot Off / On</span>
+    </div>
+
+  </nav>
+
+  <div class="sb-footer">Painel Levi v2.0 · Bot Tempest</div>
+</aside>
+
+<!-- ════════════════ MAIN ════════════════ -->
+<div class="main">
+
+  <!-- ░░░ COMANDOS ░░░ -->
+  <div id="section-comandos" class="section">
+    <div class="sec-header">
+      <div class="sec-title">📋 Comandos</div>
+      <div class="sec-sub">Todos os comandos do Bot Tempest. Clique em um para ver detalhes.</div>
+    </div>
+
+    <div class="cmd-filter-bar" id="cmdFilterBar"></div>
+    <div class="cmd-grid" id="cmdGrid"></div>
+  </div>
+
+  <!-- ░░░ GATILHO ░░░ -->
+  <div id="section-gatilho" class="section">
+    <div class="sec-header">
+      <div class="sec-title">⌨️ Gatilho dos Comandos</div>
+      <div class="sec-sub">Mude o prefixo usado para acionar os comandos do bot</div>
+    </div>
+
+    <div class="card">
+      <div class="prefix-display">
+        <div class="prefix-badge" id="prefixBadge">;</div>
+        <div class="prefix-info">
+          Prefixo atual dos comandos.<br/>
+          <span style="color:var(--muted2)">Todos os comandos (exceto slash) usam este gatilho.</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Novo Prefixo</label>
+        <input id="prefixInput" class="field-input" type="text" maxlength="5"
+          placeholder="Ex: ! . ? % ~" style="max-width:200px"/>
+      </div>
+
+      <div class="prefix-example">
+        <span class="ex-prefix" id="exPrefix">;</span><span class="ex-cmd">ping</span>&nbsp;
+        <span style="color:var(--muted2)">·</span>&nbsp;
+        <span class="ex-prefix" id="exPrefix2">;</span><span class="ex-cmd">saldo</span>&nbsp;
+        <span style="color:var(--muted2)">·</span>&nbsp;
+        <span class="ex-prefix" id="exPrefix3">;</span><span class="ex-cmd">ban</span>
+        <span class="ex-arg"> @usuario</span>
+      </div>
+
+      <div class="info-box" style="margin-top:16px">
+        ℹ️ Comandos slash (<code>/ping</code>, <code>/saldo</code>…) não são afetados pelo prefixo — eles sempre usam <strong>/</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░░ TOGGLE COMMANDS ░░░ -->
+  <div id="section-togglecmds" class="section">
+    <div class="sec-header">
+      <div class="sec-title">🔁 Ativar e Desativar Comandos</div>
+      <div class="sec-sub">Comandos desativados são ignorados pelo bot — sem resposta, sem apagar mensagem.</div>
+    </div>
+
+    <div class="toggle-list" id="toggleList"></div>
+  </div>
+
+  <!-- ░░░ ENTRADA ░░░ -->
+  <div id="section-entrada" class="section">
+    <div class="sec-header">
+      <div class="sec-title">👋 Entrada — Boas-vindas</div>
+      <div class="sec-sub">Configure o canal onde o bot envia a mensagem de boas-vindas quando alguém entra no servidor</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📢 Canal de Boas-vindas</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div class="spinner" id="chSpinner"></div>
+        <span style="font-size:13px;color:var(--muted)" id="chLoadMsg">Carregando canais do servidor...</span>
+      </div>
+      <div class="channel-selector" id="channelList"></div>
+      <div class="info-box">
+        ℹ️ Apenas canais onde o bot tem permissão de enviar mensagens aparecem selecionáveis. O canal selecionado fica destacado em marrom.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💬 Mensagem de Boas-vindas</div>
+      <div class="field">
+        <label class="field-label">Título</label>
+        <input id="wTitle" class="field-input" type="text" placeholder="Bem-vindo ao {server}!"/>
+      </div>
+      <div class="field">
+        <label class="field-label">Mensagem</label>
+        <textarea id="wMsg" class="field-input field-textarea"
+          placeholder="Olá {user}, seja bem-vindo ao servidor! 🎉&#10;Use {user} para mencionar e {server} para o nome do servidor."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">URL da Imagem (opcional)</label>
+        <input id="wImg" class="field-input" type="url" placeholder="https://cdn.discordapp.com/..."/>
+      </div>
+    </div>
+  </div>
+
+  <!-- ░░░ BOT OFF/ON ░░░ -->
+  <div id="section-botonoff" class="section">
+    <div class="sec-header">
+      <div class="sec-title">🔌 Bot Off / On</div>
+      <div class="sec-sub">Ligue ou desligue o bot Tempest</div>
+    </div>
+
+    <div class="card">
+      <div class="bot-toggle-center">
+        <img src="botfoto.jpg" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--brown);box-shadow:0 0 20px rgba(139,96,67,.4)"
+          onerror="this.style.display='none'"/>
+        <div>
+          <div class="bot-status-text" id="bigStatusLabel">Bot Ativado</div>
+          <div class="bot-status-sub" id="bigStatusSub">O bot está conectado ao Discord</div>
+        </div>
+        <button class="big-toggle on" id="bigToggle" aria-label="Ligar/Desligar bot"></button>
+        <div id="botErrMsg" style="display:none;font-size:13px;color:var(--red);text-align:center">
+          ⚠️ Configure a URL da API nas configurações para controlar o bot.
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field">
+        <label class="field-label">🔗 URL da API do Bot</label>
+        <input id="apiUrlInput" class="field-input" type="url" placeholder="https://sua-api.glitch.me"/>
+      </div>
+      <div class="info-box">
+        ℹ️ A URL base da API REST do seu bot. Ex: <code style="color:var(--brown-l)">https://meu-bot.glitch.me</code><br/>
+        O painel usa <code>/api/bot/status</code> e <code>/api/bot/toggle</code>.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ════════════════ SAVE BAR ════════════════ -->
+<div id="saveBar">
+  <span class="save-bar-msg">⚠️ Você tem alterações não salvas!</span>
+  <button class="btn btn-ghost" id="resetBtn">↩ Redefinir</button>
+  <button class="btn btn-brown" id="saveBtn">✅ Salvar alterações</button>
+</div>
+
+<!-- ════════════════ SAVE NOTICE ════════════════ -->
+<div class="save-notice" id="saveNotice"></div>
+
+<!-- ════════════════ TOASTS ════════════════ -->
+<div id="toasts"></div>
+
+<script src="index.js"></script>
+</body>
+</html>
